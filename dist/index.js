@@ -74,63 +74,63 @@ var Events = /* @__PURE__ */ ((Events2) => {
 var import_ws = __toESM(require("ws"));
 var import_node_events = __toESM(require("events"));
 var SelfJS = class extends import_node_events.default {
-  #token;
-  #heartbeatInterval;
-  #lastHeartbeat;
-  #sequenceNumber;
-  #reconnectDelay;
-  #maxReconnectAttempts;
-  #reconnectAttempts;
-  #gatewayURL;
+  token;
+  heartbeatInterval;
+  lastHeartbeat;
+  sequenceNumber;
+  reconnectDelay;
+  maxReconnectAttempts;
+  reconnectAttempts;
+  gatewayURL;
   ws;
   user;
   constructor(token, reconnectDelay = 5e3, maxReconnectAttempts = 5) {
     super();
-    this.#token = token;
-    this.#heartbeatInterval = null;
-    this.#lastHeartbeat = 0;
-    this.#sequenceNumber = null;
-    this.#reconnectDelay = reconnectDelay;
-    this.#maxReconnectAttempts = maxReconnectAttempts;
-    this.#reconnectAttempts = 0;
-    this.#gatewayURL = "wss://gateway.discord.gg/?v=10&encoding=json";
+    this.token = token;
+    this.heartbeatInterval = null;
+    this.lastHeartbeat = 0;
+    this.sequenceNumber = null;
+    this.reconnectDelay = reconnectDelay;
+    this.maxReconnectAttempts = maxReconnectAttempts;
+    this.reconnectAttempts = 0;
+    this.gatewayURL = "wss://gateway.discord.gg/?v=10&encoding=json";
     this.ws = null;
     this.user = null;
   }
   connect() {
     try {
-      this.ws = new import_ws.default(this.#gatewayURL);
+      this.ws = new import_ws.default(this.gatewayURL);
       this.ws.on("open", () => {
         console.log("Connected to Discord Gateway");
-        this.#identify();
+        this.identify();
       });
-      this.ws.on("message", (data) => this.#handleMessage(data.data));
+      this.ws.on("message", (data) => this.handleMessage(data));
       this.ws.on("error", console.error);
       this.ws.on("close", () => {
         console.log("Connection closed.");
-        this.#handleReconnect();
+        this.handleReconnect();
       });
     } catch (err) {
       console.error(err);
     }
   }
-  #handleReconnect() {
-    if (this.#reconnectAttempts < this.#maxReconnectAttempts) {
-      console.log(`Reconnecting in ${this.#reconnectDelay / 1e3} seconds...`);
+  handleReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      console.log(`Reconnecting in ${this.reconnectDelay / 1e3} seconds...`);
       setTimeout(() => {
-        this.#reconnectAttempts += 1;
+        this.reconnectAttempts += 1;
         this.connect();
-      }, this.#reconnectDelay);
+      }, this.reconnectDelay);
     } else {
       console.log("Failed to reconnect.");
     }
   }
-  #identify() {
+  identify() {
     const payload = {
       op: 2,
       // IDENTIFY op
       d: {
-        token: this.#token,
+        token: this.token,
         intents: 32769,
         properties: {
           $os: process.platform,
@@ -143,47 +143,52 @@ var SelfJS = class extends import_node_events.default {
     };
     this.ws?.send(JSON.stringify(payload));
   }
-  #startHeartbeat() {
+  startHeartbeat() {
     setInterval(() => {
       if (this.ws?.readyState === import_ws.default.OPEN) {
         const heartbeatPayload = {
           op: 1,
-          d: this.#sequenceNumber
+          d: this.sequenceNumber
         };
         this.ws.send(JSON.stringify(heartbeatPayload));
-        this.#lastHeartbeat = Date.now();
+        this.lastHeartbeat = Date.now();
       }
-    }, this.#heartbeatInterval);
+    }, this.heartbeatInterval);
   }
-  #handleMessage(data) {
-    const message = JSON.parse(data);
-    const messageData = message?.d;
-    switch (message.op) {
-      case 10 /* HELLO */:
-        this.#heartbeatInterval = message.d.heartbeat_interval;
-        this.#startHeartbeat();
-        break;
-      case 0 /* DISPATCH */:
-        this.#sequenceNumber = message.s;
-        if (message.t === "READY" /* READY */) {
-          this.user = {
-            me: messageData.user,
-            settings: messageData.user_settings,
-            guild_settings: messageData.user_guild_settings,
-            connected_accounts: messageData.connected_accounts,
-            auth_session_id_hash: messageData.auth_session_id_hash,
-            analytics_token: messageData.analytics_token,
-            friends: messageData.relationships,
-            group_chats: messageData.private_channels.filter((channel) => channel.type === 3)
-          };
-        } else if (Object.values(Events).includes(message.t)) {
-          this.emit(message.t, messageData);
-        }
-        break;
-      default:
-        if (message.op !== 11 /* HEARTBEAT_ACK */) {
-          console.log("Received unknown opcode:", message);
-        }
+  handleMessage(data) {
+    try {
+      const message = JSON.parse(data);
+      const messageData = message?.d;
+      switch (message.op) {
+        case 10 /* HELLO */:
+          this.heartbeatInterval = message.d.heartbeat_interval;
+          this.startHeartbeat();
+          break;
+        case 0 /* DISPATCH */:
+          this.sequenceNumber = message.s;
+          if (message.t === "READY" /* READY */) {
+            this.user = {
+              me: messageData.user,
+              settings: messageData.user_settings,
+              guild_settings: messageData.user_guild_settings,
+              connected_accounts: messageData.connected_accounts,
+              auth_session_id_hash: messageData.auth_session_id_hash,
+              analytics_token: messageData.analytics_token,
+              friends: messageData.relationships,
+              group_chats: messageData.private_channels.filter((channel) => channel.type === 3)
+            };
+            this.emit(message.t);
+          } else if (Object.values(Events).includes(message.t)) {
+            this.emit(message.t, messageData);
+          }
+          break;
+        default:
+          if (message.op !== 11 /* HEARTBEAT_ACK */) {
+            console.log("Received unknown opcode:", message);
+          }
+      }
+    } catch (err) {
+      console.error("Failed to parse message:", data);
     }
   }
 };
