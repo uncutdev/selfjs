@@ -143,11 +143,22 @@ interface ResponseMessageType {
 }
 
 declare class SelfJS extends EventEmitter {
-    #private;
+    private token;
+    private heartbeatInterval;
+    private lastHeartbeat;
+    private sequenceNumber;
+    private reconnectDelay;
+    private maxReconnectAttempts;
+    private reconnectAttempts;
+    private gatewayURL;
     ws: WebSocket | null;
     user: User | null;
     constructor(token: string, reconnectDelay?: number, maxReconnectAttempts?: number);
     connect(): void;
+    private handleReconnect;
+    private identify;
+    private startHeartbeat;
+    private handleMessage;
 }
 
 export { Events, type GuildSettings, type Me, Opcodes, type ResponseMessageType, SelfJS, type Settings, type User };
