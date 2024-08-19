@@ -1,3 +1,11 @@
+/src
 node_modules
+
 .env
-test/
+
+/test
+/other
+/docs
+
+tsconfig.json
+tsup.config.ts

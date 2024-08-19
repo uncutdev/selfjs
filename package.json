@@ -1,16 +1,30 @@
 {
-  "name": "semilib",
-  "version": "1.0.1",
+  "name": "@uncutdev/selfjs",
+  "version": "0.0.1",
   "description": "",
-  "type": "module",
-  "main": "./src/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "start": "node ./src/index.js"
+    "build": "tsup"
   },
-  "author": "mer403",
-  "license": "ISC",
+  "private": false,
+  "keywords": [
+    "discord",
+    "selfbot",
+    "client"
+  ],
+  "repository": {
+    "url": "https://github.com/uncutdev/selfjs"
+  },
+  "author": "uncutdev",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.5",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.12",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
   }
 }
