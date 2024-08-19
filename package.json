@@ -1,7 +1,8 @@
 {
   "name": "@uncutdev/selfjs",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "",
+  "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -19,12 +20,14 @@
   "author": "uncutdev",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^16.4.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/ws": "^8.5.12",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4"
-  }
+  },
+  "files": [
+    "dist/**/*"
+  ]
 }

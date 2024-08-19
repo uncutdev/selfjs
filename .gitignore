@@ -3,9 +3,5 @@ node_modules
 
 .env
 
-/test
-/other
-/docs
-
 tsconfig.json
 tsup.config.ts
